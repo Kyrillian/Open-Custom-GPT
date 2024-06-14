@@ -12,6 +12,7 @@ function Embed({ params: { assistantId } }) {
   const [openai, setOpenai] = useState(null);
   const [loading, setLoading] = useState(false);
   const [runInterval, setRunInterval] = useState(null);
+  const [assistantName, setAssistantName] = useState("");
   const searchParams = useSearchParams();
   const intervalRef = useRef(null);
   intervalRef.current = runInterval;
@@ -36,10 +37,8 @@ function Embed({ params: { assistantId } }) {
     });
 
     const getRun = await getRunResponse.json();
-    // console.log("getRun", getRun);
 
     if (getRun.status == "completed") {
-      // const messages = await openai.beta.threads.messages.list(threadId);
       const getMessagesResponses = await fetch(`/api/openai`, {
         method: "post",
         body: JSON.stringify({
@@ -50,17 +49,16 @@ function Embed({ params: { assistantId } }) {
       });
 
       const messages = await getMessagesResponses.json();
-      // console.log("messages", messages);
       setLoading((prev) => false);
       setChat([
         ...chatRef.current,
         { isBot: true, msg: messages.data[0].content[0].text.value },
       ]);
-      // clearInterval(intervalRef.current);
     } else {
       setTimeout(() => getAnswer(threadId, runId), 200);
     }
   };
+
   const askAssistant = async () => {
     let getQuestion = question;
     setQuestion("");
@@ -78,8 +76,6 @@ function Embed({ params: { assistantId } }) {
       });
 
       getThread = await getThreadResponse.json();
-      // console.log("getThread", getThread);
-
       setThread(getThread);
     } else {
       getThread = thread;
@@ -106,23 +102,45 @@ function Embed({ params: { assistantId } }) {
       }),
     });
 
-    // await openai.beta.threads.runs.create(getThread.id, {
-    //   assistant_id: assistantId,
-    // });
-
     const getRun = await getRunResponse.json();
-    // console.log("getRun", getRun);
-
     setRun(getRun);
     getAnswer(getThread.id, getRun.id);
   };
+
+  const fetchAssistantDetails = async (assistantId) => {
+    try {
+      const getAssistantResponse = await fetch(`/api/openai`, {
+        method: "post",
+        body: JSON.stringify({
+          method: "assistants",
+          action: "retrieve",
+          assistantId,
+        }),
+      });
+      const getAssistant = await getAssistantResponse.json();
+      return getAssistant;
+    } catch (error) {
+      console.error("Error fetching assistant details:", error);
+    }
+  };
+
+  useEffect(() => {
+    const initialize = async () => {
+      const assistantDetails = await fetchAssistantDetails(assistantId);
+      if (assistantDetails) {
+        setAssistantName(assistantDetails.name);
+      }
+    };
+
+    initialize();
+  }, [assistantId]);
 
   return (
     <div className="h-screen w-screen md:p-4 flex flex-col bg-myBg gap-4">
       <div className={`flex justify-between bg-myPrimary rounded-xl p-4`}>
         <div className="flex items-center gap-2">
           <Image height={25} width={25} src="/assistant.svg" alt="logo" />
-          <span className="font-semibold">myAssistant</span>
+          <span className="font-semibold">{assistantName}</span>
         </div>
         <div className="d-flex align-items-center gap-2 cursor-pointer">
           <Image
@@ -132,7 +150,6 @@ function Embed({ params: { assistantId } }) {
             src="/refresh.svg"
             alt="refresh"
           />
-          {/* <Image height={20} width={20} onClick={closeFrame} src='/cancel.svg'/> */}
         </div>
       </div>
       <div className="flex flex-col gap-2 w-full h-full overflow-y-auto scroll">
