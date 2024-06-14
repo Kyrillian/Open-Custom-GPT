@@ -44,5 +44,6 @@ jobs:
         port: ${{ secrets.SSH_PORT }}
         script: |
           cd ${{ secrets.SSH_DEPLOY_PATH }}
+          sudo systemctl stop open-custom-gpt
           npm install --production
           sudo systemctl restart open-custom-gpt
