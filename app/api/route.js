@@ -2,7 +2,7 @@ import fsPromises from 'fs/promises';
 import path from 'path';
 import { NextResponse } from 'next/server'
 
-const dataFilePath = path.join(process.cwd(), 'db.json');
+const dataFilePath = path.join(process.cwd(), 'db.env');
 
 export async function GET(request) {
     var url = new URL(request.url)
@@ -17,7 +17,7 @@ export async function GET(request) {
         }else{
             getAssistant = objectData.assistants[assistantId]
         }
-        resData = {openAIKey:objectData.openAIKey,assistant:getAssistant}
+        resData = {openAIKey:process.env.OPEN_AI_KEY,assistant:getAssistant}
     }else{
         resData = objectData
     }

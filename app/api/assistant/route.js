@@ -2,7 +2,7 @@ import fsPromises from 'fs/promises';
 import path from 'path';
 import { NextResponse } from 'next/server'
 
-const dataFilePath = path.join(process.cwd(), 'db.json');
+const dataFilePath = path.join(process.cwd(), 'db.env');
 
 export async function POST(request) {
     const req = await request.json()
